@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>FLY-BIRD</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            vertical-align: baseline;
+        }
+
+        .bg {
+            background: url('img/bg.jpg');
+            width: 343px;
+            height: 480px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-top: -240px;
+            margin-left: -171px;
+            overflow: hidden;
+        }
+
+        .head-title {
+            background: url('img/head.jpg');
+            width: 236px;
+            height: 77px;
+            position: absolute;
+            top: 120px;
+            left: 50px;
+        }
+
+        .head-img {
+            background: url('img/bird0.png');
+            width: 40px;
+            height: 26px;
+            position: absolute;
+            top: 145px;
+            left: 240px;
+            z-index: 1;
+        }
+
+        .startBtn {
+            background: url('img/start.jpg');
+            width: 85px;
+            height: 29px;
+            position: absolute;
+            top: 222px;
+            left: 128px;
+        }
+
+        .grass-land-1 {
+            background: url('img/banner.jpg');
+            width: 343px;
+            height: 14px;
+            position: absolute;
+            top: 422px;
+            left: 0;
+        }
+
+        .grass-land-2 {
+            background: url('img/banner.jpg');
+            width: 343px;
+            height: 14px;
+            position: absolute;
+            top: 422px;
+            left: 343px;
+        }
+
+        .scoreNum {
+            position: absolute;
+            width: 28px;
+            height: 39px;
+            top: 80px;
+            z-index: 1;
+        }
+
+        .scorePanel {
+            position: absolute;
+            left: 40px;
+            top: 150px;
+            display: none;
+            z-index: 1;
+        }
+
+        .msg {
+            background-image: url("img/message.jpg");
+            width: 269px;
+            height: 135px;
+        }
+
+        .ok {
+            background-image: url("img/ok.jpg");
+            width: 96px;
+            height: 33px;
+            margin: 15px auto;
+            cursor: pointer;
+        }
+
+        .score {
+            top: 38px;
+            right: 37px;
+            position: absolute;
+            font-weight: 900;
+            color: #e8af60;
+        }
+
+        .best {
+            position: absolute;
+            top: 88px;
+            right: 39px;
+            font-weight: 900;
+            color: #e8af60;
+        }
+    </style>
+</head>
+<body>
+
+<div class="bg" id="bg">
+    <div class="head-title" id="headTitle"></div>
+    <div class="head-img" id="headImg"></div>
+    <button class="startBtn" id="startBtn" onclick="start()"></button>
+    <div class="grass-land-1" id="grassLand1"></div>
+    <div class="grass-land-2" id="grassLand2"></div>
+
+    <div class="scoreNum" id="scoreNum1"></div>
+    <div class="scoreNum" id="scoreNum2"></div>
+    <div class="scoreNum" id="scoreNum3"></div>
+
+    <div class="scorePanel" id="scorePanel">
+        <div class="msg" id="msg">
+            <span class="score" id="msgScore"></span>
+            <span class="best" id="msgBest"></span>
+        </div>
+        <div class="ok" id="ok"></div>
+    </div>
+
+</div>
+
+<script>
+    function windowLoadSize() {
+        window.moveTo(250, 50);
+        window.resizeTo(363, 580)
+    }
+    windowLoadSize();
+
+    var headTitle = document.getElementById('headTitle');
+    var headImg = document.getElementById('headImg');
+    var startBtn = document.getElementById('startBtn');
+    var grassLand1 = document.getElementById('grassLand1');
+    var grassLand2 = document.getElementById('grassLand2');
+    var scorePanel = document.getElementById('scorePanel');
+    var msgScore = document.getElementById('msgScore');
+    var msgBest = document.getElementById('msgBest');
+    var bg = document.getElementById('bg');
+
+
+    var blockArray = [];
+    var createBlockTimeDelay = parseInt(Math.random() * 130 + 4200);
+    var scoreNum = 0;
+
+    var waveTime = setInterval(wave, 200);
+    var waveRange = 3;
+    var headImgArray = [
+
+        'url("img/bird0.png")',
+        'url("img/bird1.png")',
+        'url("img/down_bird0.png")',
+        'url("img/down_bird1.png")',
+        'url("img/up_bird0.png")',
+        'url("img/up_bird1.png")'
+
+    ];
+    var index = 0;
+    function wave() {
+        waveRange *= -1;
+        headTitle.style.top = headTitle.offsetTop + waveRange + 'px';
+        headImg.style.top = headTitle.offsetTop + waveRange + 'px';
+        headImg.style.backgroundImage = headImgArray[index++];
+        if (index == 2) {
+            index = 0;
+        }
+    }
+
+    //    草地滚动
+    var grassTime = setInterval(grass, 100);
+    function grass() {
+        if (grassLand1.offsetLeft < -343) {
+            grassLand1.style.left = 0 + 'px';
+            grassLand2.style.left = 343 + 'px'
+        }
+        grassLand1.style.left = grassLand1.offsetLeft - 3 + 'px';
+        grassLand2.style.left = grassLand2.offsetLeft - 3 + 'px';
+
+//        草地和障碍一起滚动且幅度是一致的
+        if (blockArray.length) {
+            for (var i = 0; i < blockArray.length; i++) {
+                blockArray[i].moveBlock();
+            }
+            if (blockArray.length > 4) {
+                bg.removeChild(blockArray[0].upDivMod);
+                bg.removeChild(blockArray[0].upDivPipe);
+                bg.removeChild(blockArray[0].downDivMod);
+                bg.removeChild(blockArray[0].downDivPipe);
+                blockArray.shift();
+            }
+        }
+    }
+
+    var store = {
+
+        STORAGE_KEY: 'ITEMS',
+
+        fetch: function () {
+            return parseInt(window.localStorage.getItem(store.STORAGE_KEY) || 0);
+        },
+        save: function (best) {
+            window.localStorage.setItem(store.STORAGE_KEY, parseInt(best));
+        }
+
+    };
+
+    var bird = {
+        flyBirdTime: null,
+        waveBirdTime: null,
+        velocity: 0,
+        flyBird: function () {
+            bird.flyBirdTime = setInterval(flyBirdImg, 40);
+            function flyBirdImg() {
+                headImg.style.top = headImg.offsetTop + bird.velocity++ + 'px';
+                if (headImg.offsetTop < 0) {
+                    bird.velocity = 2;
+                }
+                if (headImg.offsetTop >= 395) {
+                    bird.velocity = 0;
+                }
+                if (bird.velocity > 12) {
+                    bird.velocity = 12;
+                }
+                var onClickFunction = document.getElementById('bg');
+                onClickFunction.onclick = function () {
+                    return bird.velocity = -10;
+                }
+            }
+        },
+        waveBird: function () {
+            clearInterval(waveTime);
+            bird.waveBirdTime = setInterval(waveBirdImg, 100);
+            function waveBirdImg() {
+                if (bird.velocity > 0) {
+                    headImg.style.backgroundImage = headImgArray[2 + index++];
+                    if (index == 2) {
+                        index = 0
+                    }
+                } else {
+                    headImg.style.backgroundImage = headImgArray[4 + index++];
+                    if (index == 2) {
+                        index = 0
+                    }
+                }
+            }
+        }
+    };
+
+    function Block() {
+        this.upDivMod = null;
+        this.upDivPipe = null;
+        this.downDivPipe = null;
+        this.downDivMod = null;
+        this.upHeight = parseInt(Math.random() * 150);
+        this.gapHeight = parseInt(Math.random() * 10 + 150);
+        this.downHeight = parseInt(313 - this.upHeight - this.gapHeight);
+        this.createDiv = function (height, top, position, url) {
+            var newDiv = document.createElement('div');
+            newDiv.style.height = height;
+            newDiv.style.top = top;
+            newDiv.style.left = '343px';
+            newDiv.style.width = '62px';
+            newDiv.style.position = position;
+            newDiv.style.backgroundImage = url;
+            return newDiv;
+        };
+        this.createBlock = function () {
+            this.upDivMod = this.createDiv(this.upHeight + 60 + 'px', null, 'absolute', 'url(img/up_mod.png)');
+            this.upDivPipe = this.createDiv('60px', this.upHeight + 60 + 'px', 'absolute', 'url(img/up_pipe.png)');
+            this.downDivPipe = this.createDiv('60px', 422 - this.downHeight - 60 + 'px', 'absolute', 'url(img/down_pipe.png)');
+            this.downDivMod = this.createDiv(this.downHeight + 'px', 422 - this.downHeight + 'px', 'absolute', 'url(img/down_mod.png)');
+
+            bg.appendChild(this.upDivMod);
+            bg.appendChild(this.upDivPipe);
+            bg.appendChild(this.downDivPipe);
+            bg.appendChild(this.downDivMod);
+        };
+        this.moveBlock = function () {
+            this.upDivMod.style.left = this.upDivMod.offsetLeft - 3 + 'px';
+            this.upDivPipe.style.left = this.upDivPipe.offsetLeft - 3 + 'px';
+            this.downDivPipe.style.left = this.downDivPipe.offsetLeft - 3 + 'px';
+            this.downDivMod.style.left = this.downDivMod.offsetLeft - 3 + 'px';
+        }
+    }
+
+    var score = {
+        scoreNumTime: null,
+        listenTop: null,
+        countScore: function () {
+            var scoreNumTabImg = [
+
+                'url("img/0.jpg")',
+                'url("img/1.jpg")',
+                'url("img/2.jpg")',
+                'url("img/3.jpg")',
+                'url("img/4.jpg")',
+                'url("img/5.jpg")',
+                'url("img/6.jpg")',
+                'url("img/7.jpg")',
+                'url("img/8.jpg")',
+                'url("img/9.jpg")'
+
+
+            ];
+            score.scoreNumTime = setInterval(function () {
+                scoreNum++;
+                if (scoreNum < 10) {
+                    document.getElementById('scoreNum3').style.backgroundImage = scoreNumTabImg[scoreNum];
+                    document.getElementById('scoreNum3').style.left = 164 + 28 + 'px';
+                }
+                if (9 < scoreNum < 100) {
+                    document.getElementById('scoreNum2').style.backgroundImage = scoreNumTabImg[parseInt(scoreNum / 10)];
+                    document.getElementById('scoreNum3').style.backgroundImage = scoreNumTabImg[parseInt(scoreNum % 10)];
+                    document.getElementById('scoreNum2').style.left = 164 + 'px';
+                }
+                if (99 < scoreNum < 1000) {
+                    document.getElementById('scoreNum1').style.backgroundImage = scoreNumTabImg[parseInt(scoreNum / 100)];
+                    document.getElementById('scoreNum2').style.backgroundImage = scoreNumTabImg[parseInt((scoreNum / 10) % 10)];
+                    document.getElementById('scoreNum3').style.backgroundImage = scoreNumTabImg[parseInt(scoreNum % 10)];
+                    document.getElementById('scoreNum1').style.left = 164 - 28 + 'px';
+                }
+
+            }, createBlockTimeDelay + 800)
+        },
+        endScore: function () {
+            score.listenTop = setInterval(function () {
+
+                if (headImg.offsetTop >= 395 ) {
+                    
+                    clearInterval(bird.flyBirdTime);
+                    clearInterval(bird.waveBirdTime);
+                    clearInterval(grassTime);
+                    clearInterval(score.scoreNumTime);
+                    clearInterval(block.createBlockTime);
+                    clearInterval(score.listenTop);
+
+                    scorePanel.style.display = 'block';
+
+                    msgScore.innerText = scoreNum;
+
+                    if (scoreNum > store.fetch()) {
+                        store.save(scoreNum);
+                        msgBest.innerText = scoreNum;
+
+                    }
+                    if (scoreNum < store.fetch()) {
+                        store.save(store.fetch());
+                        msgBest.innerText = store.fetch();
+                    }
+                }
+            }, 40)
+        }
+    };
+
+    var block = {
+        createBlockTime: null,
+        initBlock: function () {
+            var newBlock = new Block();
+            newBlock.createBlock();
+            blockArray.push(newBlock);
+        },
+        creatBlock: function () {
+
+            block.createBlockTime = setInterval(function () {
+                var block = new Block();
+                block.createBlock();
+                blockArray.push(block);
+            }, createBlockTimeDelay);
+        }
+    };
+
+//    var fail = {
+//        compare: function () {
+//
+//            var birdLeft = headImg.offsetLeft;
+//            var birdTop = headImg.offsetTop;
+//            var birdWith = headImg.offsetWidth;
+//            var birdHeight = headImg.offsetHeight;
+//
+//            var blockLeft = blockArray[i].downDivPipe.offsetLeft;
+//            var blockWidth = blockArray[i].downDivPipe.offsetWidth;
+//            var blockTop = blockArray[i].downDivPipe.offsetTop;
+//            var blockBottom = blockArray[i].upDivPipe.offsetTop + 60;
+//
+//            if( birdLeft+birdWith < blockLeft &&  blockLeft+blockWidth <birdLeft){
+//                if(birdTop < blockBottom || birdTop + birdHeight > blockTop){
+//                    return true;
+//                }
+//            }
+//        }
+//    };
+
+    function start() {
+//        初始化位置
+        headTitle.style.opacity = 0;
+        startBtn.style.display = 'none';
+        headImg.style.left = 150 + 'px';
+        headImg.style.top = 150 + 'px';
+//        小鸟动作
+        bird.flyBird();
+        bird.waveBird();
+//        障碍物
+        block.initBlock();
+        block.creatBlock();
+//        得分板
+
+        score.countScore();
+//        结束
+        score.endScore();
+    }
+
+</script>
+</body>
+</html>

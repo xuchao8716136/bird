@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <!--手机界面可执行-->
     <meta name='viewport' content='width=360px, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no,target-densitydpi=device-dpi'>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -140,16 +141,22 @@
         </div>
         <div class="ok" id="ok"></div>
     </div>
-
+    <audio id="audio">
+        <source  src="audio2.wav" type="audio/mp3">
+    </audio>
+    <audio id="dead">
+        <source  src="dead.wav" type="audio/mp3">
+    </audio>
 </div>
 
 <script>
+//    声明大小，在IE和safari可用
     function windowLoadSize() {
         window.moveTo(250, 50);
         window.resizeTo(363, 580)
     }
     windowLoadSize();
-
+//声明一些DOM变量
     var headTitle = document.getElementById('headTitle');
     var headImg = document.getElementById('headImg');
     var startBtn = document.getElementById('startBtn');
@@ -160,14 +167,18 @@
     var msgBest = document.getElementById('msgBest');
     var ok = document.getElementById('ok');
     var bg = document.getElementById('bg');
-
-
+    var dead = document.getElementById('dead');
+//障碍数列
     var blockArray = [];
+//    产生障碍时间间隔
     var createBlockTimeDelay = parseInt(Math.random() * 130 + 4200);
+//    初始化得分
     var scoreNum = 0;
-
+//设置翅膀扇动定时器
     var waveTime = setInterval(wave, 200);
+//    震动幅度
     var waveRange = 3;
+//    小鸟图片数列
     var headImgArray = [
 
         'url("img/bird0.png")',
@@ -178,9 +189,12 @@
         'url("img/up_bird1.png")'
 
     ];
+//    初始化index
     var index = 0;
     function wave() {
+//        设置摆动
         waveRange *= -1;
+//        获取高度并设置高度
         headTitle.style.top = headTitle.offsetTop + waveRange + 'px';
         headImg.style.top = headTitle.offsetTop + waveRange + 'px';
         headImg.style.backgroundImage = headImgArray[index++];
@@ -189,30 +203,33 @@
         }
     }
 
-
+//草地定时器 100ms
     var grassTime = setInterval(grass, 100);
 
     function grass() {
+//        当草地移动到负值时，初始化位置
         if (grassLand1.offsetLeft < -343) {
             grassLand1.style.left = 0 + 'px';
             grassLand2.style.left = 343 + 'px'
         }
+//        设置移动速度
         grassLand1.style.left = grassLand1.offsetLeft - 3 + 'px';
         grassLand2.style.left = grassLand2.offsetLeft - 3 + 'px';
+
+//        如果有数列则开始产生障碍
 
         if (blockArray.length) {
             for (var i = 0; i < blockArray.length; i++) {
                 blockArray[i].moveBlock();
-
-                console.log(blockArray[i]);
                 if (fail.compare(headImg, blockArray[i]) || headImg.offsetTop >= 395) {
-//                    clearInterval(bird.flyBirdTime);
+
                     clearInterval(bird.waveBirdTime);
                     clearInterval(grassTime);
                     clearInterval(score.scoreNumTime);
                     clearInterval(block.createBlockTime);
                     clearInterval(score.listenTop);
                     scorePanel.style.display = 'block';
+                    dead.play();
                     ok.onclick = function () {
                         window.location.reload();
                     };
@@ -273,8 +290,10 @@
                 if (bird.velocity > 12) {
                     bird.velocity = 12;
                 }
+                var audio = document.getElementById('audio');
                 var onClickFunction = document.getElementById('bg');
                 onClickFunction.onclick = function () {
+                    audio.play();
                     return bird.velocity = -8;
                 }
             }
@@ -403,9 +422,7 @@
             var birdRightTopHeight = bird.offsetTop;
             var blockHeightTop = block.upDivPipe.offsetTop + block.upDivPipe.offsetHeight;
             var blockHeightDown = block.downDivPipe.offsetTop;
-            console.log(birdRightTopLeft, blockTopLeft, blockTopRight, birdRightTopHeight, blockHeightTop, blockHeightDown);
             if (blockTopLeft < birdRightTopLeft && birdRightTopLeft < blockTopRight) {
-
                 if (birdRightTopHeight < blockHeightTop || birdRightTopHeight > blockHeightDown) {
                     return true;
                 }
@@ -428,7 +445,6 @@
 //        得分板
         score.countScore();
     }
-
 </script>
 </body>
 </html>

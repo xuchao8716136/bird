@@ -155,6 +155,7 @@
     var scorePanel = document.getElementById('scorePanel');
     var msgScore = document.getElementById('msgScore');
     var msgBest = document.getElementById('msgBest');
+    var ok = document.getElementById('ok');
     var bg = document.getElementById('bg');
 
 
@@ -185,8 +186,9 @@
         }
     }
 
-    //    草地滚动
+
     var grassTime = setInterval(grass, 100);
+
     function grass() {
         if (grassLand1.offsetLeft < -343) {
             grassLand1.style.left = 0 + 'px';
@@ -195,16 +197,44 @@
         grassLand1.style.left = grassLand1.offsetLeft - 3 + 'px';
         grassLand2.style.left = grassLand2.offsetLeft - 3 + 'px';
 
-//        草地和障碍一起滚动且幅度是一致的
         if (blockArray.length) {
             for (var i = 0; i < blockArray.length; i++) {
                 blockArray[i].moveBlock();
+
+                console.log(blockArray[i]);
+                if (fail.compare(headImg, blockArray[i]) || headImg.offsetTop >= 395) {
+//                    clearInterval(bird.flyBirdTime);
+                    clearInterval(bird.waveBirdTime);
+                    clearInterval(grassTime);
+                    clearInterval(score.scoreNumTime);
+                    clearInterval(block.createBlockTime);
+                    clearInterval(score.listenTop);
+                    scorePanel.style.display = 'block';
+                    ok.onclick = function () {
+                        window.location.reload();
+                    };
+                    msgScore.innerText = scoreNum;
+
+                    if (scoreNum > store.fetch()) {
+                        store.save(scoreNum);
+                        msgBest.innerText = scoreNum;
+
+                    }
+                    if (scoreNum < store.fetch()) {
+                        store.save(store.fetch());
+                        msgBest.innerText = store.fetch();
+                    }
+                }
+
+
             }
+
             if (blockArray.length > 4) {
                 bg.removeChild(blockArray[0].upDivMod);
                 bg.removeChild(blockArray[0].upDivPipe);
                 bg.removeChild(blockArray[0].downDivMod);
                 bg.removeChild(blockArray[0].downDivPipe);
+
                 blockArray.shift();
             }
         }
@@ -242,7 +272,7 @@
                 }
                 var onClickFunction = document.getElementById('bg');
                 onClickFunction.onclick = function () {
-                    return bird.velocity = -10;
+                    return bird.velocity = -8;
                 }
             }
         },
@@ -340,34 +370,6 @@
                 }
 
             }, createBlockTimeDelay + 800)
-        },
-        endScore: function () {
-            score.listenTop = setInterval(function () {
-
-                if (headImg.offsetTop >= 395 ) {
-                    
-                    clearInterval(bird.flyBirdTime);
-                    clearInterval(bird.waveBirdTime);
-                    clearInterval(grassTime);
-                    clearInterval(score.scoreNumTime);
-                    clearInterval(block.createBlockTime);
-                    clearInterval(score.listenTop);
-
-                    scorePanel.style.display = 'block';
-
-                    msgScore.innerText = scoreNum;
-
-                    if (scoreNum > store.fetch()) {
-                        store.save(scoreNum);
-                        msgBest.innerText = scoreNum;
-
-                    }
-                    if (scoreNum < store.fetch()) {
-                        store.save(store.fetch());
-                        msgBest.innerText = store.fetch();
-                    }
-                }
-            }, 40)
         }
     };
 
@@ -388,26 +390,25 @@
         }
     };
 
-//    var fail = {
-//        compare: function () {
-//
-//            var birdLeft = headImg.offsetLeft;
-//            var birdTop = headImg.offsetTop;
-//            var birdWith = headImg.offsetWidth;
-//            var birdHeight = headImg.offsetHeight;
-//
-//            var blockLeft = blockArray[i].downDivPipe.offsetLeft;
-//            var blockWidth = blockArray[i].downDivPipe.offsetWidth;
-//            var blockTop = blockArray[i].downDivPipe.offsetTop;
-//            var blockBottom = blockArray[i].upDivPipe.offsetTop + 60;
-//
-//            if( birdLeft+birdWith < blockLeft &&  blockLeft+blockWidth <birdLeft){
-//                if(birdTop < blockBottom || birdTop + birdHeight > blockTop){
-//                    return true;
-//                }
-//            }
-//        }
-//    };
+    var fail = {
+
+        compare: function (bird, block) {
+            var birdRightTopLeft = bird.offsetLeft + bird.offsetWidth;
+            var blockTopLeft = block.upDivPipe.offsetLeft;
+            var blockTopRight = block.upDivPipe.offsetLeft + block.upDivPipe.offsetWidth;
+
+            var birdRightTopHeight = bird.offsetTop;
+            var blockHeightTop = block.upDivPipe.offsetTop + block.upDivPipe.offsetHeight;
+            var blockHeightDown = block.downDivPipe.offsetTop;
+            console.log(birdRightTopLeft, blockTopLeft, blockTopRight, birdRightTopHeight, blockHeightTop, blockHeightDown);
+            if (blockTopLeft < birdRightTopLeft && birdRightTopLeft < blockTopRight) {
+
+                if (birdRightTopHeight < blockHeightTop || birdRightTopHeight > blockHeightDown) {
+                    return true;
+                }
+            }
+        }
+    };
 
     function start() {
 //        初始化位置
@@ -422,10 +423,7 @@
         block.initBlock();
         block.creatBlock();
 //        得分板
-
         score.countScore();
-//        结束
-        score.endScore();
     }
 
 </script>
